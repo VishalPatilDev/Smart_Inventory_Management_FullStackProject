@@ -28,7 +28,8 @@ public class SecurityConfig {
     private JwtFilterChain jwtFilterChain;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(c->c.disable())
+        return http.cors(cors -> {})
+                .csrf(c->c.disable())
                 .authorizeHttpRequests(auth->auth.requestMatchers("/inventory_welcome/**").permitAll()
                         .anyRequest().authenticated())
 //                .httpBasic(Customizer.withDefaults())
