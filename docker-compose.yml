@@ -1,0 +1,111 @@
+# docker-compose.yml
+# Place this in the ROOT of your project (same level as backend/ and frontend/)
+#
+# smart_inventory_management/
+# ├── docker-compose.yml         ← this file
+# ├── .env                       ← secrets (never commit this)
+# ├── backend/
+# │   ├── Dockerfile
+# │   ├── pom.xml
+# │   └── src/
+# └── frontend/
+#     ├── Dockerfile
+#     ├── nginx.conf
+#     ├── package.json
+#     └── src/
+
+version: '3.9'
+
+services:
+
+  # ── MySQL database ───────────────────────────────────────────────────────────
+  database:
+    image: mysql:8.0
+    container_name: inventory_db
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE:      ${DB_NAME}
+      MYSQL_USER:          ${DB_USER}
+      MYSQL_PASSWORD:      ${DB_PASSWORD}
+
+    ports:
+      # Expose 3306 to host so you can connect from MySQL Workbench during dev
+      # Remove this in production
+      - "3306:3306"
+
+    volumes:
+      # Named volume — data persists even when the container is removed
+      - mysql_data:/var/lib/mysql
+
+    networks:
+      - inventory-net
+
+    # Health check: Spring Boot will NOT start until MySQL is actually ready.
+    # Without this, backend starts, tries to connect, MySQL isn't ready → crash.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "${DB_USER}", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Spring Boot backend ──────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend     # folder containing the backend Dockerfile
+      dockerfile: Dockerfile
+    container_name: inventory_backend
+    restart: unless-stopped
+
+    environment:
+      # These override application.properties values at runtime
+      SPRING_DATASOURCE_URL:      jdbc:mysql://database:3306/${DB_NAME}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET:                 ${JWT_SECRET}
+      JWT_EXPIRATION:             3600000
+
+    ports:
+      # Expose to host so Postman can still hit the API directly during dev
+      - "8080:8080"
+
+    depends_on:
+      database:
+        condition: service_healthy   # waits for MySQL healthcheck to pass
+
+    networks:
+      - inventory-net
+
+  # ── React frontend ───────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: inventory_frontend
+    restart: unless-stopped
+
+    ports:
+      - "80:80"    # http://localhost → React app
+
+    depends_on:
+      - backend    # just ordering — Nginx starts after backend container exists
+
+    networks:
+      - inventory-net
+
+# ── Named volumes ────────────────────────────────────────────────────────────
+volumes:
+  mysql_data:
+    # Docker manages this on the host machine
+    # Data survives container restarts and rebuilds
+
+# ── Network ──────────────────────────────────────────────────────────────────
+networks:
+  inventory-net:
+    driver: bridge
+    # All containers on this network can reach each other by service name.
+    # "backend" resolves to the Spring Boot container IP automatically.

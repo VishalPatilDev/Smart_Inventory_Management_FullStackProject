@@ -1,0 +1,16 @@
+# Add these lines to your existing .gitignore in the project root
+
+# Environment secrets — NEVER commit
+.env
+.env.local
+.env.production
+
+# Docker build artifacts
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
