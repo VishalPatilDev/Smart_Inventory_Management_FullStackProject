@@ -20,10 +20,14 @@ public class JWTUtil {
 //    private final String secret = "THIS_IS_A_SECRET_KEY_FOR_JWT_UNDERSTANDING_IT_SHOULD_BE_OF_32_BYTES";
     @Value("${jwt.secret}")
     private String secret;
-    private final SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+//    private final SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
 
     @Value("${jwt.expiration}")
     private long expiration;
+
+    private SecretKey getKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
 
     public String generateToken(String username){
@@ -31,7 +35,7 @@ public class JWTUtil {
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis()+expiration))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .signWith(getKey())
                 .compact();
     }
 
@@ -42,7 +46,7 @@ public class JWTUtil {
 
     private Claims getClaims(String token) {
         return Jwts.parser()
-                .verifyWith(key)
+                .verifyWith(getKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
