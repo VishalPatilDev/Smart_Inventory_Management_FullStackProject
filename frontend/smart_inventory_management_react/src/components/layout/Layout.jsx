@@ -1,27 +1,40 @@
 // src/components/layout/Layout.jsx
-// The main app shell: sidebar on the left, content on the right.
-// Every page is wrapped in this component (except login).
+// Replace your existing file with this.
+// The sidebar now shows a completely different, smaller set of items for STAFF —
+// no Purchase Orders, no Users, no Suppliers/Warehouses management.
+// STAFF gets: Dashboard (their own), Products (view), Inventory (view), Transactions, Reports (limited)
 
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
-const navItems = [
-  { to: '/',            label: 'Dashboard',     icon: '📊' },
-  { to: '/products',    label: 'Products',      icon: '📦' },
-  { to: '/categories',  label: 'Categories',    icon: '🏷️' },
-  { to: '/suppliers',   label: 'Suppliers',     icon: '🏭' },
-  { to: '/warehouses',  label: 'Warehouses',    icon: '🏪' },
-  { to: '/inventory',   label: 'Inventory',     icon: '📋' },
-  { to: '/purchases',   label: 'Purchase Orders', icon: '🛒' },
-  { to: '/sales',       label: 'Sales Orders',  icon: '💰' },
-  { to: '/transactions',label: 'Transactions',  icon: '🔄' },
-  { to: '/reports',     label: 'Reports',       icon: '📈' },
-  { to: '/users',       label: 'Users',         icon: '👥', adminOnly: true },
+// Full nav for ADMIN — everything
+const adminNavItems = [
+  { to: '/',             label: 'Dashboard',       icon: '📊' },
+  { to: '/products',     label: 'Products',        icon: '📦' },
+  { to: '/categories',   label: 'Categories',      icon: '🏷️' },
+  { to: '/suppliers',    label: 'Suppliers',       icon: '🏭' },
+  { to: '/warehouses',   label: 'Warehouses',      icon: '🏪' },
+  { to: '/inventory',    label: 'Inventory',       icon: '📋' },
+  { to: '/purchases',    label: 'Purchase Orders', icon: '🛒' },
+  { to: '/sales',        label: 'Sales Orders',    icon: '💰' },
+  { to: '/transactions', label: 'Transactions',    icon: '🔄' },
+  { to: '/reports',      label: 'Reports',         icon: '📈' },
+  { to: '/users',        label: 'Users',           icon: '👥' },
+]
+
+// Trimmed nav for STAFF — only what they're allowed to see, all read-only
+const staffNavItems = [
+  { to: '/',             label: 'My Dashboard',  icon: '📊' },
+  { to: '/products',     label: 'Products',      icon: '📦' },
+  { to: '/inventory',    label: 'Inventory',     icon: '📋' },
+  { to: '/transactions', label: 'Transactions',  icon: '🔄' },
 ]
 
 export default function Layout() {
   const { user, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
+
+  const navItems = isAdmin() ? adminNavItems : staffNavItems
 
   const handleLogout = () => {
     logout()
@@ -44,13 +57,25 @@ export default function Layout() {
             📦 SmartInventory
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
-            Management System
+            {isAdmin() ? 'Admin Console' : 'Staff View'}
           </div>
+        </div>
+
+        {/* Role badge — always visible so the user knows what mode they're in */}
+        <div style={{ padding: '10px 16px' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '4px 10px', borderRadius: 100, fontSize: 11, fontWeight: 600,
+            background: isAdmin() ? 'var(--danger-light)' : 'var(--info-light)',
+            color: isAdmin() ? 'var(--danger)' : 'var(--info)'
+          }}>
+            {isAdmin() ? '🛡️ ADMIN' : '👤 STAFF — Read Only'}
+          </span>
         </div>
 
         {/* Nav */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-          {navItems.filter(item => !item.adminOnly || isAdmin()).map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -70,6 +95,17 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* STAFF reminder footer */}
+        {!isAdmin() && (
+          <div style={{
+            margin: '0 16px 12px', padding: '10px 12px',
+            background: 'var(--info-light)', borderRadius: 'var(--radius)',
+            fontSize: 11, color: 'var(--info)'
+          }}>
+            You have view-only access. Contact an admin to make changes.
+          </div>
+        )}
 
         {/* User info + logout */}
         <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useFetch } from '../hooks/useFetch'
 import { getAllInventory, getWarehouses, transferStock, adjustStock } from '../api/inventory'
 import { getProducts } from '../api/inventory'
+import { useAuth } from '../context/AuthContext'
 import {
   Card, Table, Button, Modal, FormField, Select, Input,
   Badge, PageHeader, LoadingPage, Alert
@@ -10,6 +11,7 @@ import {
 import { formatNumber } from '../utils/format'
 
 export default function Inventory() {
+  const { isAdmin } = useAuth()
   const { data: inventory, loading, refetch } = useFetch(getAllInventory)
   const { data: warehouses } = useFetch(getWarehouses)
   const { data: products } = useFetch(getProducts)
@@ -94,14 +96,16 @@ export default function Inventory() {
         title="Inventory"
         sub={`${(inventory || []).length} inventory rows · ${lowCount} low stock alerts`}
         action={
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="ghost" onClick={() => { setForm({}); setError(''); setAdjustModal(true) }}>
-              Adjust Stock
-            </Button>
-            <Button onClick={() => { setForm({}); setError(''); setTransferModal(true) }}>
-              Transfer Stock
-            </Button>
-          </div>
+          isAdmin() && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button variant="ghost" onClick={() => { setForm({}); setError(''); setAdjustModal(true) }}>
+                Adjust Stock
+              </Button>
+              <Button onClick={() => { setForm({}); setError(''); setTransferModal(true) }}>
+                Transfer Stock
+              </Button>
+            </div>
+          )
         }
       />
 

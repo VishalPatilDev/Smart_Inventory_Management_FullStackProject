@@ -26,11 +26,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 403 || error.response?.status === 401) {
+    // 401 = invalid/expired token → force logout
+    if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
     }
+    // 403 = valid token, just not authorized for this action → let it pass through
+    // so the component's catch block can show "Access Denied" inline
     return Promise.reject(error)
   }
 )

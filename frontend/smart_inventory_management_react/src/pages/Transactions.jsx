@@ -1,18 +1,18 @@
 // src/pages/Transactions.jsx
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useFetch } from '../hooks/useFetch'
 import { getTransactions } from '../api/inventory'
 import { Card, Table, Badge, PageHeader, Select, Input, Button } from '../components/ui'
 import { formatDateTime } from '../utils/format'
 
 const TYPE_VARIANTS = {
-  PURCHASE:     'success',
-  SALE:         'info',
-  RETURN:       'warning',
-  DAMAGE:       'danger',
-  TRANSFER_IN:  'success',
+  PURCHASE: 'success',
+  SALE: 'info',
+  RETURN: 'warning',
+  DAMAGE: 'danger',
+  TRANSFER_IN: 'success',
   TRANSFER_OUT: 'warning',
-  ADJUSTMENT:   'default',
+  ADJUSTMENT: 'default',
 }
 
 const TYPE_ICONS = {
@@ -23,6 +23,8 @@ const TYPE_ICONS = {
 export default function Transactions() {
   const [filters, setFilters] = useState({ type: '', productId: '', warehouseId: '' })
   const [applied, setApplied] = useState({})
+  // 'desc' = newest first (default), 'asc' = oldest first
+  const [sortOrder, setSortOrder] = useState('desc')
 
   // Fetch with optional query params — refetch when applied changes
   const { data: transactions, loading, refetch } = useFetch(
@@ -32,6 +34,21 @@ export default function Transactions() {
     [JSON.stringify(applied)]
   )
 
+  // Sort client-side — re-computed only when the raw data or sort order changes.
+  // Sorting by the raw ISO string works correctly because "2026-06-30T09:00:00"
+  // compares lexicographically the same as chronologically.
+  const sortedTransactions = useMemo(() => {
+    if (!transactions) return []
+    const copy = [...transactions]
+    copy.sort((a, b) => {
+      const cmp = a.transactionDate.localeCompare(b.transactionDate)
+      return sortOrder === 'desc' ? -cmp : cmp
+    })
+    return copy
+  }, [transactions, sortOrder])
+
+  const toggleSort = () => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')
+
   const applyFilters = () => setApplied({ ...filters })
   const clearFilters = () => { setFilters({ type: '', productId: '', warehouseId: '' }); setApplied({}) }
 
@@ -39,7 +56,23 @@ export default function Transactions() {
 
   const columns = [
     {
-      key: 'transactionDate', label: 'Date & Time',
+      key: 'transactionDate',
+      label: (
+        <button
+          onClick={toggleSort}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'none', border: 'none', cursor: 'pointer',
+            font: 'inherit', color: 'inherit', padding: 0,
+            fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'
+          }}
+        >
+          Date &amp; Time
+          <span style={{ fontSize: 13, color: 'var(--primary)' }}>
+            {sortOrder === 'desc' ? '↓' : '↑'}
+          </span>
+        </button>
+      ),
       render: (r) => <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{formatDateTime(r.transactionDate)}</span>
     },
     {
@@ -140,9 +173,9 @@ export default function Transactions() {
             )}
           </div>
 
-          {(transactions || []).length > 0 && (
+          {(sortedTransactions || []).length > 0 && (
             <span style={{ fontSize: 12, color: 'var(--text-3)', marginLeft: 'auto', alignSelf: 'center' }}>
-              {(transactions || []).length} records
+              {sortedTransactions.length} records · sorted {sortOrder === 'desc' ? 'newest first' : 'oldest first'}
             </span>
           )}
         </div>
@@ -160,7 +193,7 @@ export default function Transactions() {
       <Card style={{ padding: 0 }}>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>Loading transactions…</div>
-        ) : (transactions || []).length === 0 ? (
+        ) : (sortedTransactions || []).length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>🔄</div>
             <div style={{ fontWeight: 600, color: 'var(--text-2)', marginBottom: 4 }}>No transactions found</div>
@@ -169,7 +202,7 @@ export default function Transactions() {
             </div>
           </div>
         ) : (
-          <Table columns={columns} data={transactions || []} />
+          <Table columns={columns} data={sortedTransactions} />
         )}
       </Card>
     </div>

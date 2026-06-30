@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useFetch } from '../hooks/useFetch'
 import { getProducts, createProduct, updateProduct, deleteProduct, getCategories, getSuppliers } from '../api/inventory'
+import { useAuth } from '../context/AuthContext'
 import {
   Card, Table, Button, Modal, FormField, Input, Select,
   Badge, PageHeader, LoadingPage, Alert, EmptyState
@@ -11,6 +12,7 @@ import { formatCurrency } from '../utils/format'
 const EMPTY_FORM = { productName: '', sku: '', purchasePrice: '', sellingPrice: '', categoryId: '', supplierId: '' }
 
 export default function Products() {
+  const { isAdmin } = useAuth()
   const { data: products, loading, refetch } = useFetch(getProducts)
   const { data: categories } = useFetch(getCategories)
   const { data: suppliers } = useFetch(getSuppliers)
@@ -88,12 +90,12 @@ export default function Products() {
     },
     {
       key: 'actions', label: '',
-      render: (r) => (
+      render: (r) => isAdmin() ? (
         <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
           <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>Edit</Button>
           <Button size="sm" variant="danger" onClick={() => handleDelete(r.id)}>Delete</Button>
         </div>
-      )
+      ) : null
     }
   ]
 
@@ -104,7 +106,7 @@ export default function Products() {
       <PageHeader
         title="Products"
         sub={`${filtered.length} products`}
-        action={<Button onClick={openCreate}>+ Add Product</Button>}
+        action={isAdmin() && <Button onClick={openCreate}>+ Add Product</Button>}
       />
 
       {/* Filters */}
@@ -134,13 +136,17 @@ export default function Products() {
 
       <Card style={{ padding: 0 }}>
         {filtered.length === 0
-          ? <EmptyState title="No products found" sub="Add your first product to get started" action={<Button onClick={openCreate}>+ Add Product</Button>} />
+          ? <EmptyState
+              title="No products found"
+              sub={isAdmin() ? "Add your first product to get started" : "No products match your search"}
+              action={isAdmin() && <Button onClick={openCreate}>+ Add Product</Button>}
+            />
           : <Table columns={columns} data={filtered} />
         }
       </Card>
 
-      {/* Create / Edit modal */}
-      {modal && (
+      {/* Create / Edit modal — only ADMIN can ever open this */}
+      {modal && isAdmin() && (
         <Modal title={modal === 'create' ? 'Add Product' : 'Edit Product'} onClose={() => setModal(null)}>
           {error && <Alert>{error}</Alert>}
           <FormField label="Product Name">
