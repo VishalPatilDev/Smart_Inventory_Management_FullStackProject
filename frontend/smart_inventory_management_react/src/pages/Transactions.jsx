@@ -6,13 +6,13 @@ import { Card, Table, Badge, PageHeader, Select, Input, Button } from '../compon
 import { formatDateTime } from '../utils/format'
 
 const TYPE_VARIANTS = {
-  PURCHASE: 'success',
-  SALE: 'info',
-  RETURN: 'warning',
-  DAMAGE: 'danger',
-  TRANSFER_IN: 'success',
+  PURCHASE:     'success',
+  SALE:         'info',
+  RETURN:       'warning',
+  DAMAGE:       'danger',
+  TRANSFER_IN:  'success',
   TRANSFER_OUT: 'warning',
-  ADJUSTMENT: 'default',
+  ADJUSTMENT:   'default',
 }
 
 const TYPE_ICONS = {

@@ -2,6 +2,7 @@ package com.smart_inventory.management.controller;
 
 import com.smart_inventory.management.dto.AuthenticateUserDto;
 import com.smart_inventory.management.dto.UserRequestDto;
+import com.smart_inventory.management.model.User;
 import com.smart_inventory.management.service.UserService;
 import com.smart_inventory.management.util.JWTUtil;
 import jakarta.validation.Valid;
@@ -42,8 +43,13 @@ public class WelcomeController {
                     .authenticate(new UsernamePasswordAuthenticationToken(authUser.getEmail(),authUser.getPassword()));
         }
         catch (Exception e){
-            System.out.println(Arrays.toString(e.getStackTrace()));
-        }        return ResponseEntity.status(HttpStatus.OK)
-                .body(jwtUtil.generateToken(authUser.getEmail()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+
+        // Fetch the actual user entity so we know their role
+        User user = userService.findByEmail(authUser.getEmail());
+        // Pass BOTH email and role into the token
+        String token = jwtUtil.generateToken(authUser.getEmail(), user.getRole().name());
+        return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 }

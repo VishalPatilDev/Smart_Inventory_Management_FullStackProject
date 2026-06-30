@@ -11,20 +11,20 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import Layout from './components/layout/Layout'
 
-import Login          from './pages/Login'
-import Register       from './pages/Register'
-import Dashboard      from './pages/Dashboard'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
 import StaffDashboard from './pages/StaffDashboard'
-import Products       from './pages/Products'
-import Categories     from './pages/Categories'
-import Suppliers      from './pages/Suppliers'
-import Warehouses     from './pages/Warehouses'
-import Inventory      from './pages/Inventory'
+import Products from './pages/Products'
+import Categories from './pages/Categories'
+import Suppliers from './pages/Suppliers'
+import Warehouses from './pages/Warehouses'
+import Inventory from './pages/Inventory'
 import PurchaseOrders from './pages/PurchaseOrders'
-import SalesOrders    from './pages/SalesOrders'
-import Transactions   from './pages/Transactions'
-import Reports        from './pages/Reports'
-import Users          from './pages/Users'
+import SalesOrders from './pages/SalesOrders'
+import Transactions from './pages/Transactions'
+import Reports from './pages/Reports'
+import Users from './pages/Users'
 
 // Picks which dashboard to render based on the logged-in user's role.
 // This is the single switch point — everything else stays the same.
@@ -39,7 +39,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           {/* Public */}
-          <Route path="/login"    element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
           {/* Protected — wrapped in sidebar Layout */}
@@ -55,8 +55,8 @@ export default function App() {
             <Route index element={<RoleBasedHome />} />
 
             {/* Visible to both roles — read-only enforced inside each page */}
-            <Route path="products"     element={<Products />} />
-            <Route path="inventory"    element={<Inventory />} />
+            <Route path="products" element={<Products />} />
+            <Route path="inventory" element={<Inventory />} />
             <Route path="transactions" element={<Transactions />} />
 
             {/* ADMIN ONLY — STAFF gets Access Denied screen if they navigate here directly */}

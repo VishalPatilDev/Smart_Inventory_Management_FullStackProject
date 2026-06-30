@@ -36,6 +36,8 @@ export function AuthProvider({ children }) {
     // Note: your backend puts email as the "subject"
     const userObj = {
       email: payload.sub,
+      role: payload.role
+
       // Role comes from authorities if you add it to JWT claims
       // For now we store it after login via a profile fetch
       // or you can add it to the JWT claims in JWTUtil.generateToken()

@@ -8,6 +8,7 @@ import com.smart_inventory.management.events.UserRegisterEvent;
 import com.smart_inventory.management.model.User;
 import com.smart_inventory.management.repository.UserRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -73,5 +74,10 @@ public class UserService {
         user.setRole(userRequestDto.getRole());
         userRepository.save(user);
         return UserResponseDto.builder().name(user.getName()).role(user.getRole()).email(user.getEmail()).id(user.getId()).build();
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(email));
     }
 }

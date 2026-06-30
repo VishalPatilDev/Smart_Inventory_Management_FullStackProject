@@ -1,5 +1,6 @@
 package com.smart_inventory.management.dto;
 
+import com.smart_inventory.management.model.Role;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,4 +14,5 @@ public class AuthenticateUserDto {
     private String email;
     @NotBlank(message = "Enter password")
     private String password;
+
 }
