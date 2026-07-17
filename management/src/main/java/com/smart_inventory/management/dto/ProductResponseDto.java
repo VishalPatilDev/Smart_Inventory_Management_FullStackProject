@@ -15,5 +15,6 @@ public class ProductResponseDto {
     // Flattened — no nested entity, just the names the client needs
     private String categoryName;
     private String supplierName;
+    private String imageUrl;   // Cloudinary CDN URL — null if no image uploaded yet
 }
 

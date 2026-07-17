@@ -55,19 +55,67 @@ export default function Reports() {
       {salesLoading ? <LoadingPage /> : (
         <>
           {/* Summary row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
-            {[
-              { label: 'Total Revenue', value: formatCurrency(sales?.totalRevenue), color: 'var(--primary)' },
-              { label: 'Gross Profit', value: formatCurrency(sales?.totalGrossProfit), color: 'var(--success)' },
-              { label: 'Cost of Goods', value: formatCurrency(sales?.totalCostOfGoods), color: 'var(--warning)' },
-              { label: 'Orders Placed', value: sales?.totalOrdersPlaced || 0, color: 'var(--info)' },
-            ].map((s) => (
-              <Card key={s.label}>
-                <div style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>{s.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: s.color }}>{s.value}</div>
-              </Card>
-            ))}
-          </div>
+          <div style={{
+display:'grid',
+gridTemplateColumns:'2fr 1fr 1fr 1fr',
+fontSize:12,
+fontWeight:600,
+paddingBottom:8,
+borderBottom:'1px solid var(--border)'
+}}>
+<span>PRODUCT</span>
+<span>STATUS</span>
+<span>AVAILABLE</span>
+<span>REORDER</span>
+</div>
+
+
+{lowStock.map((alert,i)=>(
+<div
+key={i}
+style={{
+display:'grid',
+gridTemplateColumns:'2fr 1fr 1fr 1fr',
+padding:'10px 0',
+borderBottom:'1px solid var(--border)',
+fontSize:13
+}}
+>
+
+<div>
+<strong>{alert.productName}</strong>
+<div style={{
+fontSize:11,
+color:'var(--text-3)'
+}}>
+{alert.warehouseName}
+</div>
+</div>
+
+
+<Badge
+variant={
+alert.urgency==="CRITICAL"
+?'danger'
+:'warning'
+}
+>
+{alert.urgency}
+</Badge>
+
+
+<span>
+{alert.currentQuantity}
+</span>
+
+
+<span>
+{alert.reorderThreshold}
+</span>
+
+
+</div>
+))}
 
           {/* Sales vs Cost bar chart */}
           <Card style={{ marginBottom: 20 }}>

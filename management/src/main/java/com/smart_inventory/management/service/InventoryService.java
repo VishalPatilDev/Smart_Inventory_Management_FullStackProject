@@ -4,6 +4,7 @@ package com.smart_inventory.management.service;
 import com.smart_inventory.management.custom_exceptions.ResourceNotFoundException;
 import com.smart_inventory.management.dto.InventoryResponseDto;
 import com.smart_inventory.management.model.Inventory;
+import com.smart_inventory.management.model.Product;
 import com.smart_inventory.management.repository.InventoryRepository;
 import com.smart_inventory.management.repository.ProductRepository;
 import com.smart_inventory.management.repository.WarehouseRepository;
@@ -24,10 +25,12 @@ public class InventoryService {
     private WarehouseRepository warehouseRepository;
 
     private InventoryResponseDto toDto(Inventory inventory) {
+        Product product = inventory.getProduct();
         return InventoryResponseDto.builder()
                 .id(inventory.getId())
                 .productName(inventory.getProduct().getProductName())
                 .sku(inventory.getProduct().getSku())
+                .imageUrl(product.getImageUrl())
                 .warehouseName(inventory.getWarehouse().getWarehouseName())
                 .quantity(inventory.getQuantity())
                 .reorderThreshold(inventory.getReorderThreshold())

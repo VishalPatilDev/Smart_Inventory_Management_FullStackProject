@@ -9,6 +9,7 @@ public class InventoryResponseDto {
     private Long id;
     private String productName;
     private String sku;
+    private String imageUrl;
     private String warehouseName;
     private Integer quantity;
     private Integer reorderThreshold;

@@ -29,4 +29,7 @@ public class ProductRequestDto {
 
     @NotNull(message = "Supplier ID is required")
     private Long supplierId;
+
+    // Optional — frontend uploads to Cloudinary first, then sends the URL here
+    private String imageUrl;
 }

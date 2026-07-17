@@ -34,6 +34,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+
     @OneToMany(mappedBy = "createdBy")
     private List<PurchaseOrder> purchaseOrders;
     //Cascade?  //No.    //Deleting user should not delete orders.   //Orders are historical data.

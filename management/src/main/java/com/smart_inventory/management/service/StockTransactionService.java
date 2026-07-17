@@ -49,6 +49,7 @@ public class StockTransactionService {
                 .transactionType(t.getTransactionType())
                 .transactionDate(t.getTransactionDate())
                 .performedBy(t.getPerformedBy().getName())
+                .imageUrl(t.getProduct().getImageUrl())
                 .build();
     }
 

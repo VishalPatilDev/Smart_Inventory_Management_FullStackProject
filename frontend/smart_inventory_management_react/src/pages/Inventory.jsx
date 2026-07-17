@@ -65,8 +65,46 @@ export default function Inventory() {
   }
 
   const columns = [
-    { key: 'productName', label: 'Product' },
-    { key: 'sku', label: 'SKU', render: (r) => <code style={{ fontSize: 11, background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4 }}>{r.sku}</code> },
+    { key: 'productName', label: 'Product' ,render:(r)=>(
+   <div style={{
+     display:'flex',
+     alignItems:'center',
+     gap:10
+   }}>
+
+   {r.imageUrl ?
+   <img
+    src={r.imageUrl}
+    style={{
+      width:36,
+      height:36,
+      borderRadius:6,
+      objectFit:'cover'
+    }}
+   />
+   :
+   <div style={{
+    width:36,
+    height:36,
+    background:'var(--surface-2)',
+    borderRadius:6
+   }}>
+    📦
+   </div>
+   }
+
+   <div>
+    <strong>{r.productName}</strong>
+    <div style={{fontSize:11,color:'var(--text-3)'}}>
+     {r.sku}
+    </div>
+   </div>
+
+   </div>
+ )},
+ 
+    
+    // { key: 'sku', label: 'SKU', render: (r) => <code style={{ fontSize: 11, background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4 }}>{r.sku}</code> },
     { key: 'warehouseName', label: 'Warehouse' },
     {
       key: 'quantity', label: 'Stock',

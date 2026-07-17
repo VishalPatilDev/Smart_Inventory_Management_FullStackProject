@@ -83,7 +83,47 @@ export default function Transactions() {
         </Badge>
       )
     },
-    { key: 'productName', label: 'Product' },
+    {
+  key: 'productName',
+  label: 'Product',
+  render: (r) => (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }}>
+      {r.imageUrl ? (
+        <img
+          src={r.imageUrl}
+          alt={r.productName}
+          style={{
+            width: 36,
+            height: 36,
+            objectFit: 'cover',
+            borderRadius: 6,
+            border: '1px solid var(--border)'
+          }}
+        />
+      ) : (
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: 6,
+          background: 'var(--surface-2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          📦
+        </div>
+      )}
+
+      <span style={{fontWeight:600}}>
+        {r.productName}
+      </span>
+    </div>
+  )
+},
     {
       key: 'sku', label: 'SKU',
       render: (r) => (

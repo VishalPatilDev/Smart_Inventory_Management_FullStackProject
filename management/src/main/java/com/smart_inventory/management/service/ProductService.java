@@ -36,6 +36,7 @@ public class ProductService {
                 // We only expose names, not full nested objects
                 .categoryName(product.getCategory().getName())
                 .supplierName(product.getSupplier().getSupplierName())
+                .imageUrl(product.getImageUrl())
                 .build();
     }
 
@@ -57,6 +58,7 @@ public class ProductService {
         product.setSellingPrice(dto.getSellingPrice());
         product.setCategory(category);
         product.setSupplier(supplier);
+        product.setImageUrl(dto.getImageUrl());   // ← save Cloudinary URL
         productRepository.save(product);
         return toDto(product);
     }
@@ -123,6 +125,10 @@ public class ProductService {
         product.setSellingPrice(dto.getSellingPrice());
         product.setCategory(category);
         product.setSupplier(supplier);
+        // Only update imageUrl if a new one was provided — keep old one if null sent
+        if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
+            product.setImageUrl(dto.getImageUrl());
+        }
         productRepository.save(product);
         return toDto(product);
     }

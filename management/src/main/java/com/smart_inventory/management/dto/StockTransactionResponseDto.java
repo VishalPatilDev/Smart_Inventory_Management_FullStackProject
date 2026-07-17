@@ -17,4 +17,5 @@ public class StockTransactionResponseDto {
     private TransactionType transactionType;
     private LocalDateTime transactionDate;
     private String performedBy;   // user's name
+    private String imageUrl;
 }

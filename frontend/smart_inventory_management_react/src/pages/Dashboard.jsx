@@ -2,7 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { useFetch } from '../hooks/useFetch'
 import { getDashboard } from '../api/inventory'
-import { StatCard, Card, Badge, LoadingPage, PageHeader } from '../components/ui'
+import { StatCard, Card, Badge, LoadingPage, PageHeader,Button } from '../components/ui'
 import { formatCurrency, formatNumber } from '../utils/format'
 
 const PIE_COLORS = ['#3b5bdb', '#2f9e44', '#e67700', '#c92a2a', '#7048e8']
@@ -149,33 +149,88 @@ export default function Dashboard() {
       </div>
 
       {/* Low stock alerts table */}
-      {(data?.criticalAlertCount > 0) && (
-        <Card>
-          <h3 style={{ fontWeight: 600, marginBottom: 16, fontSize: 14 }}>
-            Stock alerts <Badge variant="danger">{criticalAlerts.length} critical</Badge>
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {criticalAlerts.map((alert, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 14px', background: 'var(--danger-light)',
-                borderRadius: 'var(--radius)', fontSize: 13
-              }}>
-                <div>
-                  <strong>{alert.productName}</strong>
-                  <span style={{ color: 'var(--text-3)', marginLeft: 8 }}>({alert.sku})</span>
-                  <span style={{ color: 'var(--text-2)', marginLeft: 8 }}>— {alert.warehouseName}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ color: 'var(--text-3)', fontSize: 12 }}>Supplier: {alert.supplierName}</span>
-                  <Badge variant="danger">{alert.urgency}</Badge>
-                  <span style={{ fontWeight: 600, color: 'var(--danger)' }}>{alert.currentQuantity} left</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+     {criticalAlerts.length > 0 && (
+<Card style={{
+  marginBottom:20,
+  borderLeft:'4px solid var(--danger)'
+}}>
+  <div style={{
+    display:'flex',
+    justifyContent:'space-between',
+    marginBottom:14
+  }}>
+    <h3 style={{fontSize:14,fontWeight:600}}>
+      Inventory Alerts
+      <Badge variant="danger">
+        {criticalAlerts.length}
+      </Badge>
+    </h3>
+
+    <Button variant="ghost">
+      View Inventory
+    </Button>
+  </div>
+
+  {criticalAlerts.slice(0,5).map((alert,i)=>(
+    <div
+      key={i}
+      style={{
+        display:'flex',
+        justifyContent:'space-between',
+        padding:'10px 12px',
+        background:'var(--surface-2)',
+        borderRadius:8,
+        marginBottom:8
+      }}
+    >
+
+      <div>
+        <strong>{alert.productName}</strong>
+
+        <div style={{
+          fontSize:12,
+          color:'var(--text-3)'
+        }}>
+          {alert.warehouseName}
+          {' · '}
+          Supplier: {alert.supplierName}
+        </div>
+      </div>
+
+
+      <div style={{textAlign:'right'}}>
+
+        <Badge
+          variant={
+            alert.currentQuantity === 0
+            ? 'danger'
+            : 'warning'
+          }
+        >
+          {
+            alert.currentQuantity === 0
+            ? 'OUT OF STOCK'
+            : 'LOW STOCK'
+          }
+        </Badge>
+
+
+        <div style={{
+          fontSize:12,
+          marginTop:4
+        }}>
+          {alert.currentQuantity}
+          /
+          {alert.reorderThreshold}
+        </div>
+
+      </div>
+
+    </div>
+  ))}
+
+</Card>
+)}
     </div>
   )
 }
