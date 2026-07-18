@@ -1,26 +1,28 @@
-// src/pages/Login.jsx
+// src/pages/Login.jsx — uses toast for errors + loading state
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Card, Button, Input, FormField, Alert } from '../components/ui'
+import { useToast } from '../context/ToastContext'
+import { Card, Button, Input, FormField } from '../components/ui'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
     try {
       await login(email, password)
+      toast.success('Welcome back!')
       navigate('/')
     } catch (err) {
-      setError(err.response?.data || 'Invalid email or password')
+      const msg = err.response?.data || 'Invalid email or password'
+      toast.error(typeof msg === 'string' ? msg : 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -40,8 +42,6 @@ export default function Login() {
             Sign in to your account
           </p>
         </div>
-
-        {error && <Alert variant="danger">{error}</Alert>}
 
         <form onSubmit={handleSubmit}>
           <FormField label="Email">
@@ -73,10 +73,7 @@ export default function Login() {
 
         <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--text-3)' }}>
           Don't have an account?{' '}
-          <Link
-            to="/register"
-            style={{ color: 'var(--primary)', fontWeight: 500, textDecoration: 'none' }}
-          >
+          <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 500, textDecoration: 'none' }}>
             Create one
           </Link>
         </p>

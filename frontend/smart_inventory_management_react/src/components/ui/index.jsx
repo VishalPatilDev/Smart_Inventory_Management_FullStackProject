@@ -211,48 +211,77 @@ export function Modal({ title, children, onClose, width = 500 }) {
   )
 }
 
+// REPLACE your existing FormField and Input in src/components/ui/index.jsx
+// with these versions. They accept an `error` prop that shows a red message
+// below the field AND turns the input border red automatically.
+
 // ── FormField ─────────────────────────────────────────────────────────────────
-export function FormField({ label, error, children }) {
+export function FormField({ label, error, required, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontWeight: 500, marginBottom: 6, fontSize: 13 }}>
+      <label style={{
+        display: 'block', fontWeight: 500, marginBottom: 6, fontSize: 13,
+        color: error ? 'var(--danger)' : 'var(--text)'
+      }}>
         {label}
+        {required && <span style={{ color: 'var(--danger)', marginLeft: 2 }}>*</span>}
       </label>
+
+      {/* Clone child and inject error state for Input/Select */}
       {children}
-      {error && <span style={{ color: 'var(--danger)', fontSize: 12, marginTop: 4, display: 'block' }}>{error}</span>}
+
+      {error && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          color: 'var(--danger)', fontSize: 12, marginTop: 5
+        }}>
+          <span style={{ fontSize: 11 }}>⚠</span>
+          {error}
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Input ─────────────────────────────────────────────────────────────────────
-export function Input({ ...props }) {
+// Added `error` prop — turns border red when truthy
+export function Input({ error, ...props }) {
   return (
     <input
       {...props}
       style={{
         width: '100%', padding: '8px 12px',
-        border: '1px solid var(--border-strong)',
+        border: `1px solid ${error ? 'var(--danger)' : 'var(--border-strong)'}`,
         borderRadius: 'var(--radius)', fontSize: 14,
-        background: 'var(--surface)', color: 'var(--text)',
-        outline: 'none', transition: 'border-color 0.15s',
+        background: error ? 'var(--danger-light)' : 'var(--surface)',
+        color: 'var(--text)',
+        outline: 'none', transition: 'border-color 0.15s, background 0.15s',
         ...props.style
       }}
-      onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; props.onFocus?.(e) }}
-      onBlur={(e) => { e.target.style.borderColor = 'var(--border-strong)'; props.onBlur?.(e) }}
+      onFocus={(e) => {
+        e.target.style.borderColor = error ? 'var(--danger)' : 'var(--primary)'
+        props.onFocus?.(e)
+      }}
+      onBlur={(e) => {
+        e.target.style.borderColor = error ? 'var(--danger)' : 'var(--border-strong)'
+        props.onBlur?.(e)
+      }}
     />
   )
 }
 
 // ── Select ────────────────────────────────────────────────────────────────────
-export function Select({ children, ...props }) {
+// Added `error` prop for consistency
+export function Select({ children, error, ...props }) {
   return (
     <select
       {...props}
       style={{
         width: '100%', padding: '8px 12px',
-        border: '1px solid var(--border-strong)',
+        border: `1px solid ${error ? 'var(--danger)' : 'var(--border-strong)'}`,
         borderRadius: 'var(--radius)', fontSize: 14,
-        background: 'var(--surface)', color: 'var(--text)',
+        background: error ? 'var(--danger-light)' : 'var(--surface)',
+        color: 'var(--text)',
         outline: 'none', cursor: 'pointer',
         ...props.style
       }}
@@ -261,7 +290,6 @@ export function Select({ children, ...props }) {
     </select>
   )
 }
-
 // ── Alert ─────────────────────────────────────────────────────────────────────
 export function Alert({ children, variant = 'danger' }) {
   const s = badgeVariants[variant] || badgeVariants.danger

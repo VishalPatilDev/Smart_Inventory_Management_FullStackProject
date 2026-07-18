@@ -1,12 +1,13 @@
-// src/pages/Inventory.jsx
+// src/pages/Inventory.jsx — updated with toast, confirm, useFormHandler
 import { useState } from 'react'
 import { useFetch } from '../hooks/useFetch'
-import { getAllInventory, getWarehouses, transferStock, adjustStock } from '../api/inventory'
-import { getProducts } from '../api/inventory'
+import { useFormHandler } from '../hooks/useFormHandler'
+import { useConfirm } from '../components/ui/ConfirmDialog'
+import { getAllInventory, getWarehouses, transferStock, adjustStock, getProducts } from '../api/inventory'
 import { useAuth } from '../context/AuthContext'
 import {
   Card, Table, Button, Modal, FormField, Select, Input,
-  Badge, PageHeader, LoadingPage, Alert
+  Badge, PageHeader, LoadingPage
 } from '../components/ui'
 import { formatNumber } from '../utils/format'
 
@@ -15,12 +16,12 @@ export default function Inventory() {
   const { data: inventory, loading, refetch } = useFetch(getAllInventory)
   const { data: warehouses } = useFetch(getWarehouses)
   const { data: products } = useFetch(getProducts)
+  const { saving, globalError, handle, clearErrors } = useFormHandler()
+  const { confirm, ConfirmDialogUI } = useConfirm()
 
   const [transferModal, setTransferModal] = useState(false)
   const [adjustModal, setAdjustModal] = useState(false)
   const [form, setForm] = useState({})
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const [filterWarehouse, setFilterWarehouse] = useState('')
   const [showLowOnly, setShowLowOnly] = useState(false)
 
@@ -31,80 +32,40 @@ export default function Inventory() {
   })
 
   const lowCount = (inventory || []).filter(r => r.lowStock).length
+  const uniqueWarehouses = [...new Set((inventory || []).map(r => r.warehouseName))]
 
-  const handleTransfer = async () => {
-    setError(''); setSaving(true)
-    try {
-      await transferStock({
-        productId: Number(form.productId),
-        fromWarehouseId: Number(form.fromWarehouseId),
-        toWarehouseId: Number(form.toWarehouseId),
-        quantity: Number(form.quantity)
-      })
-      setTransferModal(false)
-      setForm({})
-      refetch()
-    } catch (e) { setError(e.response?.data || 'Transfer failed') }
-    finally { setSaving(false) }
-  }
+  const handleTransfer = () => handle(
+    () => transferStock({
+      productId: Number(form.productId),
+      fromWarehouseId: Number(form.fromWarehouseId),
+      toWarehouseId: Number(form.toWarehouseId),
+      quantity: Number(form.quantity)
+    }),
+    `Transferred ${form.quantity} units successfully`,
+    () => { setTransferModal(false); setForm({}); refetch() }
+  )
 
-  const handleAdjust = async () => {
-    setError(''); setSaving(true)
-    try {
-      await adjustStock({
-        productId: Number(form.productId),
-        warehouseId: Number(form.warehouseId),
-        quantity: Number(form.quantity),
-        transactionType: form.transactionType
-      })
-      setAdjustModal(false)
-      setForm({})
-      refetch()
-    } catch (e) { setError(e.response?.data || 'Adjustment failed') }
-    finally { setSaving(false) }
-  }
+  const handleAdjust = () => handle(
+    () => adjustStock({
+      productId: Number(form.productId),
+      warehouseId: Number(form.warehouseId),
+      quantity: Number(form.quantity),
+      transactionType: form.transactionType
+    }),
+    `Stock adjustment (${form.transactionType}) recorded`,
+    () => { setAdjustModal(false); setForm({}); refetch() }
+  )
 
   const columns = [
-    { key: 'productName', label: 'Product' ,render:(r)=>(
-   <div style={{
-     display:'flex',
-     alignItems:'center',
-     gap:10
-   }}>
-
-   {r.imageUrl ?
-   <img
-    src={r.imageUrl}
-    style={{
-      width:36,
-      height:36,
-      borderRadius:6,
-      objectFit:'cover'
-    }}
-   />
-   :
-   <div style={{
-    width:36,
-    height:36,
-    background:'var(--surface-2)',
-    borderRadius:6
-   }}>
-    📦
-   </div>
-   }
-
-   <div>
-    <strong>{r.productName}</strong>
-    <div style={{fontSize:11,color:'var(--text-3)'}}>
-     {r.sku}
-    </div>
-   </div>
-
-   </div>
- )},
- 
-    
-    // { key: 'sku', label: 'SKU', render: (r) => <code style={{ fontSize: 11, background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4 }}>{r.sku}</code> },
+    { key: 'productName', label: 'Product' },
+    {
+      key: 'sku', label: 'SKU',
+      render: (r) => (
+        <code style={{ fontSize: 11, background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4 }}>
+          {r.sku}
+        </code>
+      )
+    },
     { key: 'warehouseName', label: 'Warehouse' },
     {
       key: 'quantity', label: 'Stock',
@@ -119,14 +80,13 @@ export default function Inventory() {
       key: 'status', label: 'Status',
       render: (r) => r.quantity === 0
         ? <Badge variant="danger">Out of stock</Badge>
-        : r.lowStock ? <Badge variant="warning">Low stock</Badge>
+        : r.lowStock
+        ? <Badge variant="warning">Low stock</Badge>
         : <Badge variant="success">In stock</Badge>
     }
   ]
 
   if (loading) return <LoadingPage />
-
-  const uniqueWarehouses = [...new Set((inventory || []).map(r => r.warehouseName))]
 
   return (
     <div>
@@ -136,10 +96,10 @@ export default function Inventory() {
         action={
           isAdmin() && (
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="ghost" onClick={() => { setForm({}); setError(''); setAdjustModal(true) }}>
+              <Button variant="ghost" onClick={() => { clearErrors(); setForm({}); setAdjustModal(true) }}>
                 Adjust Stock
               </Button>
-              <Button onClick={() => { setForm({}); setError(''); setTransferModal(true) }}>
+              <Button onClick={() => { clearErrors(); setForm({}); setTransferModal(true) }}>
                 Transfer Stock
               </Button>
             </div>
@@ -147,6 +107,7 @@ export default function Inventory() {
         }
       />
 
+      {/* Low stock warning banner */}
       {lowCount > 0 && (
         <div style={{
           background: 'var(--warning-light)', border: '1px solid var(--warning)',
@@ -162,7 +123,7 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Warehouse filter */}
       <Card style={{ marginBottom: 16, padding: '12px 16px' }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <Select value={filterWarehouse} onChange={(e) => setFilterWarehouse(e.target.value)} style={{ maxWidth: 220 }}>
@@ -182,28 +143,32 @@ export default function Inventory() {
       {/* Transfer modal */}
       {transferModal && (
         <Modal title="Transfer Stock Between Warehouses" onClose={() => setTransferModal(false)}>
-          {error && <Alert>{error}</Alert>}
-          <FormField label="Product">
+          {globalError && (
+            <div style={{ padding: '10px 14px', marginBottom: 16, background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 8, fontSize: 13, border: '1px solid var(--danger)' }}>
+              {globalError}
+            </div>
+          )}
+          <FormField label="Product" required>
             <Select value={form.productId || ''} onChange={(e) => setForm({ ...form, productId: e.target.value })}>
               <option value="">Select product…</option>
               {(products || []).map(p => <option key={p.id} value={p.id}>{p.productName} ({p.sku})</option>)}
             </Select>
           </FormField>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <FormField label="From Warehouse">
+            <FormField label="From Warehouse" required>
               <Select value={form.fromWarehouseId || ''} onChange={(e) => setForm({ ...form, fromWarehouseId: e.target.value })}>
                 <option value="">From…</option>
                 {(warehouses || []).map(w => <option key={w.id} value={w.id}>{w.warehouseName}</option>)}
               </Select>
             </FormField>
-            <FormField label="To Warehouse">
+            <FormField label="To Warehouse" required>
               <Select value={form.toWarehouseId || ''} onChange={(e) => setForm({ ...form, toWarehouseId: e.target.value })}>
                 <option value="">To…</option>
                 {(warehouses || []).map(w => <option key={w.id} value={w.id}>{w.warehouseName}</option>)}
               </Select>
             </FormField>
           </div>
-          <FormField label="Quantity">
+          <FormField label="Quantity" required>
             <Input type="number" min="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="10" />
           </FormField>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -216,20 +181,24 @@ export default function Inventory() {
       {/* Adjust modal */}
       {adjustModal && (
         <Modal title="Adjust Stock" onClose={() => setAdjustModal(false)}>
-          {error && <Alert>{error}</Alert>}
-          <FormField label="Product">
+          {globalError && (
+            <div style={{ padding: '10px 14px', marginBottom: 16, background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 8, fontSize: 13, border: '1px solid var(--danger)' }}>
+              {globalError}
+            </div>
+          )}
+          <FormField label="Product" required>
             <Select value={form.productId || ''} onChange={(e) => setForm({ ...form, productId: e.target.value })}>
               <option value="">Select product…</option>
               {(products || []).map(p => <option key={p.id} value={p.id}>{p.productName}</option>)}
             </Select>
           </FormField>
-          <FormField label="Warehouse">
+          <FormField label="Warehouse" required>
             <Select value={form.warehouseId || ''} onChange={(e) => setForm({ ...form, warehouseId: e.target.value })}>
               <option value="">Select warehouse…</option>
               {(warehouses || []).map(w => <option key={w.id} value={w.id}>{w.warehouseName}</option>)}
             </Select>
           </FormField>
-          <FormField label="Adjustment Type">
+          <FormField label="Adjustment Type" required>
             <Select value={form.transactionType || ''} onChange={(e) => setForm({ ...form, transactionType: e.target.value })}>
               <option value="">Select type…</option>
               <option value="DAMAGE">DAMAGE — remove damaged stock</option>
@@ -237,7 +206,7 @@ export default function Inventory() {
               <option value="ADJUSTMENT">ADJUSTMENT — manual correction</option>
             </Select>
           </FormField>
-          <FormField label="Quantity">
+          <FormField label="Quantity" required>
             <Input type="number" min="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
           </FormField>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -246,6 +215,8 @@ export default function Inventory() {
           </div>
         </Modal>
       )}
+
+      {ConfirmDialogUI}
     </div>
   )
 }

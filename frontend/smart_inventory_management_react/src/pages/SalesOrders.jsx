@@ -1,19 +1,19 @@
-// src/pages/SalesOrders.jsx
+// src/pages/SalesOrders.jsx — updated with toast notifications
 import { useState } from 'react'
 import { useFetch } from '../hooks/useFetch'
+import { useFormHandler } from '../hooks/useFormHandler'
 import { getSalesOrders, createSalesOrder, getWarehouses, getProducts } from '../api/inventory'
-import { Card, Table, Button, Modal, FormField, Select, Input, PageHeader, Alert, Badge } from '../components/ui'
+import { Card, Table, Button, Modal, FormField, Select, Input, PageHeader, Badge } from '../components/ui'
 import { formatCurrency, formatDate } from '../utils/format'
 
 export default function SalesOrders() {
   const { data: orders, loading, refetch } = useFetch(getSalesOrders)
   const { data: warehouses } = useFetch(getWarehouses)
   const { data: products } = useFetch(getProducts)
+  const { saving, globalError, handle, clearErrors } = useFormHandler()
 
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({ warehouseId: '', items: [{ productId: '', quantity: '' }] })
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
 
   const addItem = () => setForm({ ...form, items: [...form.items, { productId: '', quantity: '' }] })
   const removeItem = (i) => setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) })
@@ -21,21 +21,18 @@ export default function SalesOrders() {
     const items = [...form.items]; items[i] = { ...items[i], [key]: val }; setForm({ ...form, items })
   }
 
-  const handleSave = async () => {
-    setError(''); setSaving(true)
-    try {
-      await createSalesOrder({
-        warehouseId: Number(form.warehouseId),
-        items: form.items.map(it => ({ productId: Number(it.productId), quantity: Number(it.quantity) }))
-      })
+  const handleSave = () => handle(
+    () => createSalesOrder({
+      warehouseId: Number(form.warehouseId),
+      items: form.items.map(it => ({ productId: Number(it.productId), quantity: Number(it.quantity) }))
+    }),
+    `Sales order created — stock dispatched successfully`,
+    () => {
       setModal(false)
       setForm({ warehouseId: '', items: [{ productId: '', quantity: '' }] })
       refetch()
-    } catch (e) {
-      // Your backend returns a clear message like "Insufficient stock for..."
-      setError(e.response?.data || 'Failed to create sales order')
-    } finally { setSaving(false) }
-  }
+    }
+  )
 
   const columns = [
     { key: 'id', label: 'SO #', render: (r) => <strong>SO-{r.id}</strong> },
@@ -51,19 +48,23 @@ export default function SalesOrders() {
       <PageHeader
         title="Sales Orders"
         sub="Stock dispatched to customers"
-        action={<Button onClick={() => { setError(''); setModal(true) }}>+ New Sales Order</Button>}
+        action={<Button onClick={() => { clearErrors(); setModal(true) }}>+ New Sales Order</Button>}
       />
       <Card style={{ padding: 0 }}>
-        {loading
-          ? <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>Loading…</div>
-          : <Table columns={columns} data={orders || []} />
-        }
+        {loading ? <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)' }}>Loading…</div>
+          : <Table columns={columns} data={orders || []} />}
       </Card>
 
       {modal && (
-        <Modal title="New Sales Order" onClose={() => setModal(false)} width={560}>
-          {error && <Alert>{error}</Alert>}
-          <FormField label="Dispatch from Warehouse">
+        <Modal title="New Sales Order" onClose={() => setModal(false)} width={520}>
+          {/* Insufficient stock error appears here prominently */}
+          {globalError && (
+            <div style={{ padding: '12px 14px', marginBottom: 16, background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 8, fontSize: 13, border: '1px solid var(--danger)', lineHeight: 1.5 }}>
+              <strong>Cannot create order:</strong> {globalError}
+            </div>
+          )}
+
+          <FormField label="Dispatch from Warehouse" required>
             <Select value={form.warehouseId} onChange={(e) => setForm({ ...form, warehouseId: e.target.value })}>
               <option value="">Select warehouse…</option>
               {(warehouses || []).map(w => <option key={w.id} value={w.id}>{w.warehouseName}</option>)}
@@ -90,7 +91,7 @@ export default function SalesOrders() {
           <Button variant="ghost" size="sm" onClick={addItem}>+ Add Item</Button>
 
           <div style={{ padding: '10px 0', marginTop: 8, borderTop: '1px solid var(--border)', fontSize: 12, color: 'var(--text-3)' }}>
-            Selling prices are taken automatically from each product's current price.
+            Selling prices are taken from each product's current price at the time of sale.
           </div>
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
