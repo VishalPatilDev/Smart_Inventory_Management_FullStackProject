@@ -3,15 +3,14 @@ package com.smart_inventory.management.dto;
 import com.smart_inventory.management.model.Role;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Getter
 @Setter
-@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString
+@Builder
 public class UserResponseDto {
     private Long id;
 
@@ -20,4 +19,6 @@ public class UserResponseDto {
 
 
     private Role role;
+
+
 }

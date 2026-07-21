@@ -1,54 +1,68 @@
-package com.smart_inventory.management.security;
+    package com.smart_inventory.management.security;
 
-import com.smart_inventory.management.service.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.Customizer;
+    import com.smart_inventory.management.service.UserDetailsServiceImpl;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.security.authentication.AuthenticationManager;
+    import org.springframework.security.authentication.ProviderManager;
+    import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+    import org.springframework.security.config.Customizer;
+    import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+    import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.security.web.SecurityFilterChain;
+    import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+    import org.springframework.security.config.Customizer;
 
 
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
-public class SecurityConfig {
+    @Configuration
+    @EnableWebSecurity
+    @EnableMethodSecurity
+    public class SecurityConfig {
 
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+        @Autowired
+        private UserDetailsServiceImpl userDetailsService;
+        @Autowired
+        private CustomOAuth2UserService customOAuth2UserService;
+        @Autowired
+        private OAuth2SuccessHandler oauth2SuccessHandler;
 
-    @Autowired
-    private JwtFilterChain jwtFilterChain;
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.cors(Customizer.withDefaults())
-                .csrf(c->c.disable())
-                .authorizeHttpRequests(auth->auth.requestMatchers("/inventory_welcome/**").permitAll()
-                        .anyRequest().authenticated())
-//                .httpBasic(Customizer.withDefaults())
-                .addFilterBefore(jwtFilterChain, UsernamePasswordAuthenticationFilter.class)
-                .build();
+        @Autowired
+        private JwtFilterChain jwtFilterChain;
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            return http.cors(Customizer.withDefaults())
+                    .csrf(c->c.disable())
+                    .authorizeHttpRequests(auth->auth.requestMatchers(
+                            "/oauth2/**",
+                                    "/login/oauth2/**",
+                                    "/inventory_welcome/**")
+                            .permitAll()
+                            .anyRequest().authenticated())
+    //                .httpBasic(Customizer.withDefaults())
+                    .oauth2Login(oauth -> oauth
+                            .userInfoEndpoint(userInfo -> userInfo
+                                    .userService(customOAuth2UserService)
+                            )
+                            .successHandler(oauth2SuccessHandler)
+                    )
+                    .addFilterBefore(jwtFilterChain, UsernamePasswordAuthenticationFilter.class)
+                    .build();
 
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(){
+            DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(userDetailsService);
+            daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+            return new ProviderManager(daoAuthenticationProvider);
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder(){
+            return new BCryptPasswordEncoder();
+        }
     }
-
-    @Bean
-    public AuthenticationManager authenticationManager(){
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(userDetailsService);
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        return new ProviderManager(daoAuthenticationProvider);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
-}

@@ -77,6 +77,14 @@ export default function Login() {
             Create one
           </Link>
         </p>
+        <button
+  onClick={() => {
+    window.location.href =
+      "http://localhost:8080/oauth2/authorization/google";
+  }}
+>
+  Continue with Google
+</button>
       </Card>
     </div>
   )
