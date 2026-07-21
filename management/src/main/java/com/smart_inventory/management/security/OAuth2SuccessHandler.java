@@ -1,5 +1,6 @@
 package com.smart_inventory.management.security;
 
+import com.smart_inventory.management.model.Role;
 import com.smart_inventory.management.model.User;
 import com.smart_inventory.management.repository.UserRepository;
 import com.smart_inventory.management.util.JWTUtil;
@@ -32,7 +33,22 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String email = oauthUser.getAttribute("email");
         User user = userRepository
                 .findByEmail(email)
-                .orElseThrow();
+                .orElseGet(() -> {
+
+                    User newUser = new User();
+
+                    newUser.setName(oauthUser.getAttribute("name"));
+                    newUser.setEmail(email);
+
+                    // OAuth users don't authenticate with a local password
+                    newUser.setPassword("1234567");
+
+                    // Default role
+                    newUser.setRole(Role.STAFF);
+
+                    return userRepository.save(newUser);
+
+                });
         String jwt =
                 jwtUtil.generateToken(
                         user.getEmail(),
