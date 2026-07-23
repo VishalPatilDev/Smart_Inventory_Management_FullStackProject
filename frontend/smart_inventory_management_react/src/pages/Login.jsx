@@ -4,6 +4,9 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { Card, Button, Input, FormField } from '../components/ui'
+import { FcGoogle } from "react-icons/fc";
+import { bgImage } from "../assets/inventory_managemnet.png"
+
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -30,11 +33,30 @@ export default function Login() {
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex',
-      alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg)', padding: 16
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundImage:
+        "linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.6)), `url(${bgImage})`",
+      backgroundSize: "cover",
+      backgroundPosition: "center center",
+      backgroundRepeat: "no-repeat",
+      padding: "24px",
+      overflow:"hidden"
+
     }}>
-      <Card style={{ width: '100%', maxWidth: 400 }}>
+      <Card style={{
+        width: "100%",
+        maxWidth: 420,
+        padding: "32px",
+        borderRadius: "20px",
+        background: "rgba(255,255,255,0.88)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.25)",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+      }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: 36, marginBottom: 8 }}>📦</div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>SmartInventory</h1>
@@ -77,14 +99,82 @@ export default function Login() {
             Create one
           </Link>
         </p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            margin: "24px 0",
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              height: 1,
+              background: "#ddd",
+            }}
+          />
+          <span
+            style={{
+              padding: "0 14px",
+              color: "#777",
+              fontSize: 13,
+            }}
+          >
+            OR
+          </span>
+          <div
+            style={{
+              flex: 1,
+              height: 1,
+              background: "#ddd",
+            }}
+          />
+        </div>
         <button
-  onClick={() => {
-    window.location.href =
-      "http://localhost:8080/oauth2/authorization/google";
-  }}
->
-  Continue with Google
-</button>
+          onClick={() => {
+            window.location.href =
+              "http://localhost:8080/oauth2/authorization/google";
+          }}
+          className="
+    group
+    flex items-center
+    justify-center
+    gap-3
+    w-80
+    h-12
+    bg-white
+    border border-gray-300
+    rounded-xl
+    text-gray-700
+    font-semibold
+    shadow-sm
+    hover:shadow-lg
+    hover:border-gray-400
+    active:scale-95
+    transition-all
+    duration-200
+  "
+        >
+          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white">
+            <FcGoogle className="text-2xl" />
+          </div>
+
+          <span className="tracking-wide ">
+            Continue with Google
+          </span>
+        </button>
+        {/* <button
+          onClick={() => {
+            window.location.href =
+              "http://localhost:8080/oauth2/authorization/github";
+          }}
+          className="flex items-center justify-center gap-3 px-6 py-3 w-full max-w-sm
+             bg-black text-white rounded-lg
+             hover:bg-gray-800 transition duration-200 shadow-md"
+        >
+          
+          <span>Continue with GitHub</span>
+        </button> */}
       </Card>
     </div>
   )
